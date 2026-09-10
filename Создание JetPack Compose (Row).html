@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Руководство: Compose-проект с нуля (только Row)</title>
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --primary-dark: #4B44CC;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --info: #17a2b8;
+            --bg: #f0f2f5;
+            --card: #ffffff;
+            --text: #2d3748;
+            --text-light: #718096;
+            --code-bg: #1e1e2e;
+            --code-text: #e4e4e4;
+            --border: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 16px;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 70px 20px 50px;
+            text-align: center;
+        }
+
+        .hero h1 { font-size: 2.6em; margin-bottom: 12px; font-weight: 800; }
+        .hero p { font-size: 1.2em; opacity: 0.95; max-width: 720px; margin: 0 auto 20px; }
+
+        .badges { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        .badge {
+            background: rgba(255,255,255,0.18);
+            padding: 6px 16px;
+            border-radius: 24px;
+            font-size: 0.88em;
+            font-weight: 500;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 30px 20px; }
+
+        .toc {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+        }
+
+        .toc h2 { color: var(--primary); margin-bottom: 16px; font-size: 1.5em; }
+        .toc ol { padding-left: 24px; }
+        .toc li { margin-bottom: 8px; }
+        .toc a { color: var(--text); text-decoration: none; font-weight: 500; }
+        .toc a:hover { color: var(--primary); }
+
+        .step {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 34px;
+            margin-bottom: 28px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+            border-left: 5px solid var(--primary);
+        }
+
+        .step-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+
+        .step-num {
+            background: var(--primary);
+            color: white;
+            width: 46px; height: 46px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 1.25em;
+            flex-shrink: 0;
+        }
+
+        .step h2 { font-size: 1.5em; }
+        .step h3 { font-size: 1.2em; margin: 22px 0 12px; color: var(--primary-dark); }
+        .step h4 { font-size: 1.05em; margin: 16px 0 8px; color: var(--text-light); }
+
+        p { margin-bottom: 12px; }
+        ul, ol { margin: 12px 0 16px 28px; }
+        li { margin-bottom: 6px; }
+
+        /* ===== Блок кода ===== */
+        .code-wrapper {
+            position: relative;
+            margin: 16px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
+
+        .code-header {
+            background: #2a2a3e;
+            color: #c9c9d4;
+            padding: 10px 18px;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 0.85em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3a3a4e;
+        }
+
+        .code-header .filename {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .code-header .filename::before {
+            content: "📄";
+            font-size: 1em;
+        }
+
+        .copy-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 5px 14px;
+            border-radius: 6px;
+            font-size: 0.82em;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .copy-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .copy-btn.copied { background: var(--success); }
+
+        pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px 20px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.88em;
+            line-height: 1.65;
+            margin: 0;
+        }
+
+        pre code {
+            font-family: inherit;
+            white-space: pre;
+            color: inherit;
+        }
+
+        /* ===== Уведомления ===== */
+        .tip, .warn, .error, .info, .success {
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin: 16px 0;
+            border-left: 4px solid;
+        }
+        .tip { background: #e8f5e9; border-color: var(--success); }
+        .tip::before { content: "💡 "; }
+        .warn { background: #fff8e1; border-color: var(--warning); }
+        .warn::before { content: "⚠️ "; }
+        .error { background: #fce4ec; border-color: var(--danger); }
+        .error::before { content: "🔴 "; }
+        .info { background: #e3f2fd; border-color: var(--info); }
+        .info::before { content: "ℹ️ "; }
+        .success { background: #e8f5e9; border-color: var(--success); }
+        .success::before { content: "✅ "; }
+
+        .what-why {
+            background: linear-gradient(135deg, rgba(102,126,234,0.08), rgba(118,75,162,0.08));
+            border: 1px solid rgba(102,126,234,0.2);
+            border-radius: 10px;
+            padding: 18px;
+            margin: 16px 0;
+        }
+        .what-why h4 { color: var(--primary-dark); margin-bottom: 8px; }
+
+        .file-tree {
+            background: #f7f8fa;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            margin: 14px 0;
+            white-space: pre;
+        }
+        .file-tree .dir { color: var(--primary); font-weight: 700; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0;
+            font-size: 0.93em;
+        }
+        th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background: var(--primary); color: white; font-weight: 600; }
+        tr:nth-child(even) { background: #f8f9fa; }
+
+        .inline-code {
+            background: #edf2f7;
+            padding: 2px 7px;
+            border-radius: 5px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88em;
+            color: #e53e3e;
+        }
+
+        footer {
+            text-align: center;
+            padding: 35px 20px;
+            color: var(--text-light);
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 1.8em; }
+            .step { padding: 20px; }
+            pre { font-size: 0.78em; padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="hero">
+    <h1>🎯 Compose для начинающих</h1>
+    <p>Пошаговое руководство по созданию первого проекта на Jetpack Compose. Тема урока — компонент <strong>Row</strong>. Весь код пригоден для копирования.</p>
+    <div class="badges">
+        <span class="badge">Kotlin 2.4.20</span>
+        <span class="badge">AGP 9.4.0</span>
+        <span class="badge">Gradle 9.6.0</span>
+        <span class="badge">Compose BOM 2026.08.00</span>
+        <span class="badge">minSdk 24</span>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="toc">
+        <h2>📑 Содержание</h2>
+        <ol>
+            <li><a href="#s1">Установка инструментов</a></li>
+            <li><a href="#s2">Создание проекта в Android Studio</a></li>
+            <li><a href="#s3">gradle-wrapper.properties</a></li>
+            <li><a href="#s4">gradle-daemon-jvm.properties</a></li>
+            <li><a href="#s5">gradle.properties</a></li>
+            <li><a href="#s6">libs.versions.toml (каталог версий)</a></li>
+            <li><a href="#s7">settings.gradle.kts</a></li>
+            <li><a href="#s8">Корневой build.gradle.kts</a></li>
+            <li><a href="#s9">app/build.gradle.kts</a></li>
+            <li><a href="#s10">AndroidManifest.xml</a></li>
+            <li><a href="#s11">strings.xml</a></li>
+            <li><a href="#s12">TutorialTexts.kt (текстовые компоненты)</a></li>
+            <li><a href="#s13">RowTutorialScreen.kt (главный экран)</a></li>
+            <li><a href="#s14">MainActivity.kt</a></li>
+            <li><a href="#s15">Запуск и проверка</a></li>
+        </ol>
+    </div>
+
+    <!-- ===== ШАГ 1 ===== -->
+    <div class="step" id="s1">
+        <div class="step-header">
+            <div class="step-num">1</div>
+            <h2>Установка инструментов</h2>
+        </div>
+
+        <div class="what-why">
+            <h4>🤔 Что мы делаем и зачем?</h4>
+            <p>Перед написанием кода нужно подготовить среду разработки: Android Studio, JDK 25 и Android SDK 37.</p>
+        </div>
+
+        <h3>1.1 Установите Android Studio</h3>
+        <ol>
+            <li>Перейдите на <a href="https://developer.android.com/studio" target="_blank">developer.android.com/studio</a></li>
+            <li>Скачайте последнюю версию (2025.1 или новее)</li>
+            <li>Установите и запустите</li>
+        </ol>
+
+        <h3>1.2 Проверьте JDK</h3>
+        <ol>
+            <li><strong>File → Settings → Build, Execution, Deployment → Build Tools → Gradle</strong></li>
+            <li>В поле <strong>Gradle JDK</strong> выберите версию 25 (или скачайте через «Download JDK»)</li>
+        </ol>
+
+        <h3>1.3 Установите Android SDK 37</h3>
+        <ol>
+            <li><strong>File → Settings → Languages & Frameworks → Android SDK</strong></li>
+            <li>Установите <strong>SDK Platform: API 37</strong></li>
+        </ol>
+    </div>
+
+    <!-- ===== ШАГ 2 ===== -->
+    <div class="step" id="s2">
+        <div class="step-header">
+            <div class="step-num">2</div>
+            <h2>Создание проекта в Android Studio</h2>
+        </div>
+
+        <div class="what-why">
+            <h4>🤔 Что мы делаем и зачем?</h4>
+            <p>Создаём базовый каркас приложения. Android Studio сгенерирует структуру, которую мы потом настроим.</p>
+        </div>
+
+        <ol>
+            <li><strong>File → New → New Project</strong></li>
+            <li>Шаблон: <strong>Empty Activity</strong> (Compose)</li>
+            <li>Параметры:
+                <ul>
+                    <li><strong>Name:</strong> <span class="inline-code">RowTutorial</span></li>
+                    <li><strong>Package name:</strong> <span class="inline-code">com.example.rowtutorial</span></li>
+                    <li><strong>Minimum SDK:</strong> API 24</li>
+                    <li><strong>Build configuration language:</strong> Kotlin DSL (build.gradle.kts)</li>
+                </ul>
+            </li>
+            <li>Нажмите <strong>Finish</strong></li>
+        </ol>
+
+        <h3>Структура проекта после создания:</h3>
+        <div class="file-tree"><span class="dir">📁 RowTutorial/</span>
+├── <span class="dir">📁 app/</span>
+│   ├── <span class="dir">📁 src/main/java/com/example/rowtutorial/</span>
+│   │   └── MainActivity.kt
+│   ├── <span class="dir">📁 src/main/</span>
+│   │   └── AndroidManifest.xml
+│   └── build.gradle.kts
+├── <span class="dir">📁 gradle/</span>
+│   ├── <span class="dir">📁 wrapper/</span>
+│   │   └── gradle-wrapper.properties
+│   └── libs.versions.toml
+├── build.gradle.kts
+├── settings.gradle.kts
+└── gradle.properties</div>
+    </div>
+
+    <!-- ===== ШАГ 3 ===== -->
+    <div class="step" id="s3">
+        <div class="step-header">
+            <div class="step-num">3</div>
+            <h2>gradle-wrapper.properties</h2>
+        </div>
+
+        <div class="what-why">
+            <h4>🤔 Что мы делаем и зачем?</h4>
+            <p>Gradle Wrapper фиксирует версию Gradle (9.6.0), чтобы сборка работала одинаково на всех машинах.</p>
+        </div>
+
+        <p>Откройте <span class="inline-code">gradle/wrapper/gradle-wrapper.properties</span> и замените содержимое:</p>
+
+        <div class="code-wrapper">
+            <div class="code-header">
+                <span class="filename">gradle-wrapper.properties</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Копировать</button>
+            </div>
+<pre><code>distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionSha256Sum=bbaeb2fef8710818cf0e261201dab964c572f92b942812df0c3620d62a529a01
+distributionUrl=https\://services.gradle.org/distributions/gradle-9.6.0-bin.zip
+networkTimeout=10000
+validateDistributionUrl=true
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists</code></pre>
+        </div>
+    </div>
+
+    <!-- ===== ШАГ 4 ===== -->
+    <div class="step" id="s4">
+        <div class="step-header">
+            <div class="step-num">4</div>
+            <h2>gradle-daemon-jvm.properties</h2>
+        </div>
+
+        <div class="what-why">
+            <h4>🤔 Что мы делаем и зачем?</h4>
+            <p>Этот файл позволяет Gradle автоматически скачать JDK 25 с Foojay API, если его нет в системе.</p>
+        </div>
+
+        <p>Создайте новый файл <span class="inline-code">gradle/gradle-daemon-jvm.properties</span>:</p>
+
+        <div class="code-wrapper">
+            <div class="code-header">
+                <span class="filename">gradle-daemon-jvm.properties</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Копировать</button>
+            </div>
+<pre><code>toolchainUrl.FREE_BSD.AARCH64=https\://api.foojay.io/disco/v3.0/ids/cf726b4a1c84b50457225f9bba6d7650/redirect
+toolchainUrl.FREE_BSD.X86_64=https\://api.foojay.io/disco/v3.0/ids/fa1e318c287360478e3c83a9a3ef1007/redirect
+toolchainUrl.LINUX.AARCH64=https\://api.foojay.io/disco/v3.0/ids/cf726b4a1c84b50457225f9bba6d7650/redirect
+toolchainUrl.LINUX.X86_64=https\://api.foojay.io/disco/v3.0/ids/fa1e318c287360478e3c83a9a3ef1007/redirect
+toolchainUrl.MAC_OS.AARCH64=https\://api.foojay.io/disco/v3.0/ids/c2dd35c9d0aaf0ba6ad0791320f99dfc/redirect
+toolchainUrl.MAC_OS.X86_64=https\://api.foojay.io/disco/v3.0/ids/e5810bd7fd1f8a586644409d395a7e55/redirect
+toolchainUrl.UNIX.AARCH64=https\://api.foojay.io/disco/v3.0/ids/cf726b4a1c84b50457225f9bba6d7650/redirect
+toolchainUrl.UNIX.X86_64=https\://api.foojay.io/disco/v3.0/ids/fa1e318c287360478e3c83a9a3ef1007/redirect
+toolchainUrl.WINDOWS.AARCH64=https\://api.foojay.io/disco/v3.0/ids/7b3c4877c0749019e6805bb61e421497/redirect
+toolchainUrl.WINDOWS.X86_64=https\://api.foojay.io/disco/v3.0/ids/d76df094a9cbbabd3b08251f9e61444a/redirect
+toolchainVersion=25</code></pre>
+        </div>
+    </div>
+
+    <!-- ===== ШАГ 5 ===== -->
+    <div class="step" id="s5">
+        <div class="step-header">
+            <div class="step-num">5</div>
+            <h2>gradle.properties</h2>
+        </div>
+
+        <div class="what-why">
+            <h4>🤔 Что мы делаем и зачем?</h4>
+            <p>Глобальные настройки сборки. Здесь включаем важные флаги для AGP 9.x и Compose.</p>
+        </div>
+
+        <p>Замените содержимое файла <span class="inline-code">gradle.properties</span> в корне проекта:</p>
+
+        <div class="code-wrapper">
+            <div class="code-header">
+                <span class="filename">gradle.properties</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Копировать</button>
+            </div>
+<pre><code>org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+android.useAndroidX=true
+kotlin.code.style=official
+android.nonTransitiveRClass=true
+android.nonFinalResIds=true
+android.defaults.buildfeatures.resvalues=false
+android.enableAppCompileTimeRClass=true
+android.r8.optimizedResourceShrinking=true
+android.builtInKotlin=true
+android.newDsl=true
+android.dependency.excludeLibraryComponentsFromConstraints=true</code></pre>
+        </div>
+
+        <div class="warn">
+            Флаг <span class="inline-code">android.builtInKotlin=true</span> обязателен для AGP 9.x — поддержка Kotlin встроена, отдельный плагин <span class="inline-code">kotlin-android</span> больше не нужен.
+        </div>
+    </div>
+
+    <!-- ===== ШАГ 6 ===== -->
+    <div class="step" id="s6">
+        <div class="step-header">
+            <div class="step-num">6</div>
+            <h2>libs.versions.toml (каталог версий)</h2>
+        </div>
+
+        <div class="what-why">
+            <h4>🤔 Что мы делаем и зачем?</h4>
+            <p>Централизованный справочник всех версий библиотек. Чтобы обновить библиотеку — достаточно изменить одну строку в этом файле.</p>
+        </div>
+
+        <p>Замените содержимое файла <span class="inline-code">gradle/libs.versions.toml</span>:</p>
+
+        <div class="code-wrapper">
+            <div class="code-header">
+                <span class="filename">libs.versions.toml</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Копировать</button>
+            </div>
+<pre><code>[versions]
+androidGradlePlugin = "9.4.0"
+compileSdk = "37"
+minSdk = "24"
+targetSdk = "35"
+kotlin = "2.4.20"
+coroutines = "1.11.0"
+androidx-corektx = "1.19.0"
+androidx-appcompat = "1.8.0"
+androidx-activity-compose = "1.13.0"
+androidx-compose-bom = "2026.08.00"
+androidx-lifecycle-compose = "2.11.0"
+junit = "4.13.2"
+androidx-test = "1.7.0"
+androidx-test-ext-junit = "1.3.0"
+androidx-test-espresso = "3.7.0"
+
+[libraries]
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-corektx" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
+androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "androidx-compose-bom" }
+androidx-compose-runtime = { module = "androidx.compose.runtime:runtime" }
+androidx-compose-foundation = { module = "androidx.compose.foundation:foundation" }
+androidx-compose-foundation-layout = { module = "androidx.compose.foundation:foundation-layout" }
+androidx-compose-ui = { module = "androidx.compose.ui:ui" }
+androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+androidx-compose-material = { module = "androidx.compose.material:material" }
+androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle-compose" }
+junit = { module = "junit:junit", version.ref = "junit" }
+androidx-test-core = { module = "androidx.test:core", version.ref = "androidx-test" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test" }
+androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidx-test-espresso" }
+androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-ext-junit" }
+androidx-compose-ui-test = { module = "androidx.compose.ui:ui-test-junit4" }
+androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }</code></pre>
+        </div>
+
+        <div class="info">
+            <strong>BOM (Bill of Materials)</strong> — специальный механизм, который гарантирует совместимость всех Compose-библиотек. Версии <span class="inline-code">ui</span>, <span class="inline-code">foundation</span>, <span class="inline-code">material</span> подтягиваются автоматически.
+        </div>
+    </div>
+
+    <!-- ===== ШАГ 7 ===== -->
+    <div class="step" id="s7">
+        <div class="step-header">
+            <div class="step-num">7</div>
+            <h2>settings.gradle.kts</h2>
+        </div>
+
+        <div class="what-why">
+            <h4>🤔 Что мы делаем и зачем?</h4>
+            <p>Говорим Gradle: откуда брать зависимости и какие модули входят в проект.</p>
+        </div>
+
+        <div class="code-wrapper">
+            <div class="code-header">
+                <span class="filename">settings.gradle.kts</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Копировать</button>
+            </div>
+<pre><code>pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "RowTutorial"
+include(":app")</code></pre>
+        </div>
+    </div>
+
+    <!-- ===== ШАГ 8 ===== -->
+    <div class="step" id="s8">
+        <div class="step-header">
+            <div class="step-num">8</div>
+            <h2>Корневой build.gradle.kts</h2>
+        </div>
+
+        <div class="what-why">
+            <h4>🤔 Что мы делаем и зачем?</h4>
+            <p>Объявляем плагины для всего проекта. Флаг <span class="inline-code">apply false</span> означает: «загрузить, но не применять здесь».</p>
+        </div>
+
+        <div class="code-wrapper">
+            <div class="code-header">
+                <span class="filename">build.gradle.kts (корневой)</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Копировать</button>
+            </div>
+<pre><code>plugins {
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.compose) apply false
+}</code></pre>
+        </div>
+    </div>
+
+    <!-- ===== ШАГ 9 ===== -->
+    <div class="step" id="s9">
+        <div class="step-header">
+            <div class="step-num">9</div>
+            <h2>app/build.gradle.kts</h2>
+        </div>
+
+        <div class="what-why">
+            <h4>🤔 Что мы делаем и зачем?</h4>
+            <p>Основной файл конфигурации модуля <span class="inline-code">app</span>. Здесь указываем: версии SDK, идентификатор приложения и все зависимости.</p>
+        </div>
+
+        <div class="code-wrapper">
+            <div class="code-header">
+                <span class="filename">app/build.gradle.kts</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Копировать</button>
+            </div>
+<pre><code>plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.compose)
+}
+
+android {
+    namespace = "com.example.rowtutorial"
+    compileSdk = libs.versions.compileSdk.get().toInt()
+
+    defaultConfig {
+        applicationId = "com.example.rowtutorial"
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = libs.versions.targetSdk.get().toInt()
+        versionCode = 1
+        versionName = "1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    buildFeatures {
+        compose = true
+    }
+}
+
+dependencies {
+    implementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.activity.compose)
+
+    implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material)
+    implementation(libs.androidx.compose.material3)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.compose.ui.test)
+    androidTestImplementation(libs.androidx.compose.ui.test.manifest)
+}</code></pre>
+        </div>
+    </div>
+
+    <!-- ===== ШАГ 10 ===== -->
+    <div class="step" id="s10">
+        <div class="step-header">
+            <div class="step-num">10</div>
+            <h2>AndroidManifest.xml</h2>
+        </div>
+
+        <div class="what-why">
+            <h4>🤔 Что мы делаем и зачем?</h4>
+            <p>Манифест — «паспорт» приложения. Здесь указаны компоненты, разрешения, тема и стартовая Activity.</p>
+        </div>
+
+        <p>Замените содержимое <span class="inline-code">app/src/main/AndroidManifest.xml</span>:</p>
+
+        <div class="code-wrapper">
+            <div class="code-header">
+                <span class="filename">AndroidManifest.xml</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Копировать</button>
+            </div>
+<pre><code>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"&gt;
+
+    &lt;uses-permission android:name="android.permission.INTERNET" /&gt;
+
+    &lt;application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar"&gt;
+
+        &lt;activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.Material.Light.NoActionBar"&gt;
+            &lt;intent-filter&gt;
+                &lt;action android:name="android.intent.action.MAIN" /&gt;
+                &lt;category android:name="android.intent.category.LAUNCHER" /&gt;
+            &lt;/intent-filter&gt;
+        &lt;/activity&gt;
+    &lt;/application&gt;
+&lt;/manifest&gt;</code></pre>
+        </div>
+    </div>
+
+    <!-- ===== ШАГ 11 ===== -->
+    <div class="step" id="s11">
+        <div class="step-header">
+            <div class="step-num">11</div>
+            <h2>strings.xml</h2>
+        </div>
+
+        <p>Создайте папку <span class="inline-code">app/src/main/res/values/</span> (если её нет) и добавьте файл <span class="inline-code">strings.xml</span>:</p>
+
+        <div class="code-wrapper">
+            <div class="code-header">
+                <span class="filename">app/src/main/res/values/strings.xml</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Копировать</button>
+            </div>
+<pre><code>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;resources&gt;
+    &lt;string name="app_name"&gt;Row Tutorial&lt;/string&gt;
+&lt;/resources&gt;</code></pre>
+        </div>
+    </div>
+
+    <!-- ===== ШАГ 12 ===== -->
+    <div class="step" id="s12">
+        <div class="step-header">
+            <div class="step-num">12</div>
+            <h2>TutorialTexts.kt</h2>
+        </div>
+
+        <div class="what-why">
+            <h4>🤔 Что мы делаем и зачем?</h4>
+            <p>Создаём переиспользуемые текстовые компоненты: заголовок, описательный текст с **маркдауном** и подзаголовок.</p>
+        </div>
+
+        <ol>
+            <li>В папке <span class="inline-code">com/example/rowtutorial/</span> создайте пакет <span class="inline-code">ui.components</span></li>
+            <li>Внутри создайте файл <span class="inline-code">TutorialTexts.kt</span></li>
+        </ol>
+
+        <div class="code-wrapper">
+            <div class="code-header">
+                <span class="filename">ui/components/TutorialTexts.kt</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Копировать</button>
+            </div>
+<pre><code>package com.example.rowtutorial.ui.components
+
+import android.content.res.Configuration
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.ContentAlpha
+import androidx.compose.material.LocalContentAlpha
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+val boldRegex = Regex("(?&lt;!\\*)\\*\\*(?![*]).*?(?&lt;!\\*)\\*\\*(?!\\*)")
+
+@Composable
+fun TutorialHeader(text: String, modifier: Modifier = Modifier) {
+    Text(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 8.dp, end = 8.dp, top = 12.dp, bottom = 6.dp),
+        fontWeight = FontWeight.Bold,
+        fontSize = 22.sp,
+        text = text
+    )
+}
+
+@Composable
+fun StyleableTutorialText(
+    text: String,
+    modifier: Modifier = Modifier,
+    bullets: Boolean = true
+) {
+    var results: MatchResult? = boldRegex.find(text)
+    val boldIndexes = mutableListOf&lt;Pair&lt;Int, Int&gt;&gt;()
+    val keywords = mutableListOf&lt;String&gt;()
+    var finalText = text
+
+    while (results != null) {
+        keywords.add(results.value)
+        results = results.next()
+    }
+
+    keywords.forEach { keyword -&gt;
+        val newKeyWord = keyword.removeSurrounding("**")
+        finalText = finalText.replace(keyword, newKeyWord)
+        val indexOf = finalText.indexOf(newKeyWord)
+        boldIndexes.add(Pair(indexOf, indexOf + newKeyWord.length))
+    }
+
+    val annotatedString = buildAnnotatedString {
+        append(finalText)
+        if (bullets) {
+            addStyle(
+                style = SpanStyle(fontWeight = FontWeight.Bold),
+                start = 0,
+                end = 3
+            )
+        }
+        boldIndexes.forEach {
+            addStyle(
+                style = SpanStyle(
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xff64B5F6),
+                    fontSize = 15.sp
+                ),
+                start = it.first,
+                end = it.second
+            )
+        }
+    }
+
+    Text(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 8.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
+        fontSize = 16.sp,
+        text = annotatedString
+    )
+}
+
+@Composable
+fun TutorialText2(text: String, modifier: Modifier = Modifier) {
+    CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.body2,
+            color = Color.Gray,
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 8.dp)
+        )
+    }
+}
+
+@Preview
+@Preview("dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(device = Devices.PIXEL_C)
+@Composable
+private fun TutorialTextPreview() {
+    StyleableTutorialText("1-) Это **пример** текста для туториала")
+}</code></pre>
+        </div>
+    </div>
+
+    <!-- ===== ШАГ 13 ===== -->
+    <div class="step" id="s13">
+        <div class="step-header">
+            <div class="step-num">13</div>
+            <h2>RowTutorialScreen.kt</h2>
+        </div>
+
+        <div class="what-why">
+            <h4>🤔 Что мы делаем и зачем?</h4>
+            <p>Главный экран — все примеры компонента <span class="inline-code">Row</span>: горизонтальное распределение, вертикальное выравнивание, вес, порядок модификаторов и тень.</p>
+        </div>
+
+        <p>Создайте файл <span class="inline-code">RowTutorialScreen.kt</span> в папке <span class="inline-code">com/example/rowtutorial/</span>:</p>
+
+        <div class="code-wrapper">
+            <div class="code-header">
+                <span class="filename">RowTutorialScreen.kt</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Копировать</button>
+            </div>
+<pre><code>package com.example.rowtutorial
+
+import android.content.res.Configuration
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.rowtutorial.ui.components.StyleableTutorialText
+import com.example.rowtutorial.ui.components.TutorialHeader
+import com.example.rowtutorial.ui.components.TutorialText2
+
+@Preview(showBackground = true)
+@Composable
+fun RowTutorialScreen() {
+    RowTutorialContent()
+}
+
+@Composable
+private fun RowTutorialContent() {
+    LazyColumn(Modifier.fillMaxSize()) {
+        item {
+            TutorialHeader(text = "Row")
+            StyleableTutorialText(
+                text = "1-) **Row** is a layout composable that places its children in a horizontal sequence."
+            )
+            RowExample()
+
+            StyleableTutorialText(
+                text = "2-) **verticalAlignment** aligns children vertically inside the Row."
+            )
+            RowVerticalAlignmentExample()
+
+            StyleableTutorialText(
+                text = "3-) **weight** determines how much of the parent's width each child occupies."
+            )
+            RowWeightExample()
+
+            StyleableTutorialText(
+                text = "4-) **Modifier order matters!** padding before/after background changes behavior."
+            )
+            RowPaddingOrderExample()
+
+            StyleableTutorialText(
+                text = "5-) You can apply **shadow** to a Row for elevation effect."
+            )
+            RowShadowExample()
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+fun RowExample() {
+    TutorialText2(text = "Arrangement.Start")
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+        RowTexts()
+    }
+
+    TutorialText2(text = "Arrangement.End")
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+        RowTexts()
+    }
+
+    TutorialText2(text = "Arrangement.Center")
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+        RowTexts()
+    }
+
+    TutorialText2(text = "Arrangement.SpaceEvenly")
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+        RowTexts()
+    }
+
+    TutorialText2(text = "Arrangement.SpaceAround")
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
+        RowTexts()
+    }
+
+    TutorialText2(text = "Arrangement.SpaceBetween")
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        RowTexts()
+    }
+}
+
+@Composable
+fun RowVerticalAlignmentExample() {
+    val containerModifier = Modifier
+        .fillMaxWidth()
+        .height(90.dp)
+        .padding(vertical = 4.dp)
+        .background(Color.LightGray)
+
+    TutorialText2(text = "Alignment.Top")
+    Row(modifier = containerModifier, verticalAlignment = Alignment.Top) {
+        DifferentHeightElements()
+    }
+
+    TutorialText2(text = "Alignment.CenterVertically")
+    Row(modifier = containerModifier, verticalAlignment = Alignment.CenterVertically) {
+        DifferentHeightElements()
+    }
+
+    TutorialText2(text = "Alignment.Bottom")
+    Row(modifier = containerModifier, verticalAlignment = Alignment.Bottom) {
+        DifferentHeightElements()
+    }
+}
+
+@Composable
+fun RowWeightExample() {
+    val parentModifier = Modifier
+        .fillMaxWidth()
+        .height(60.dp)
+        .background(Color.LightGray)
+
+    val blockModifier = Modifier
+        .fillMaxHeight()
+        .background(Color(0xFFA1887F))
+        .padding(4.dp)
+
+    Row(modifier = parentModifier) {
+        Text(
+            fontSize = 12.sp,
+            text = "Weight 2",
+            color = Color.White,
+            modifier = blockModifier.weight(2f)
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            fontSize = 12.sp,
+            text = "Weight 3",
+            color = Color.White,
+            modifier = blockModifier.weight(3f)
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            fontSize = 12.sp,
+            text = "Weight 4",
+            color = Color.White,
+            modifier = blockModifier.weight(4f)
+        )
+    }
+}
+
+@Composable
+fun RowPaddingOrderExample() {
+    val rowModifier = Modifier
+        .fillMaxWidth()
+        .background(Color(0xFFF06292))
+        .padding(8.dp)
+
+    val modifierA = Modifier
+        .background(Color(0xFFFFEB3B))
+        .padding(15.dp)
+
+    val modifierB = Modifier
+        .padding(10.dp)
+        .background(Color(0xFF80DEEA))
+        .padding(end = 15.dp)
+
+    Row(modifier = rowModifier, horizontalArrangement = Arrangement.SpaceEvenly) {
+        Column(
+            modifier = modifierA
+                .background(Color(0xFFFFFFFF))
+                .padding(8.dp)
+        ) {
+            Text(text = "A1")
+            Text(text = "A2")
+        }
+        Column(
+            modifier = modifierB
+                .background(Color(0xFF9575CD))
+                .padding(top = 12.dp, bottom = 12.dp)
+        ) {
+            Text(text = "B1", color = Color.White)
+            Text(text = "B2", color = Color.White)
+        }
+    }
+}
+
+@Composable
+fun RowShadowExample() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .shadow(
+                elevation = 8.dp,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .background(Color.White)
+            .padding(8.dp)
+    ) {
+        RowTexts()
+    }
+}
+
+@Composable
+fun RowTexts() {
+    Text(
+        text = "Row1",
+        modifier = Modifier.background(Color(0xFFFF9800)).padding(4.dp)
+    )
+    Text(
+        text = "Row2",
+        modifier = Modifier.background(Color(0xFFFFA726)).padding(4.dp)
+    )
+    Text(
+        text = "Row3",
+        modifier = Modifier.background(Color(0xFFFFB74D)).padding(4.dp)
+    )
+}
+
+@Composable
+fun DifferentHeightElements() {
+    Text(
+        text = "30dp",
+        color = Color.White,
+        modifier = Modifier
+            .background(Color(0xFF4CAF50))
+            .height(30.dp)
+            .width(70.dp)
+    )
+    Text(
+        text = "50dp",
+        color = Color.White,
+        modifier = Modifier
+            .background(Color(0xFF66BB6A))
+            .height(50.dp)
+            .width(70.dp)
+    )
+    Text(
+        text = "70dp",
+        color = Color.White,
+        modifier = Modifier
+            .background(Color(0xFF81C784))
+            .height(70.dp)
+            .width(70.dp)
+    )
+}
+
+@Preview(showBackground = true)
+@Preview("dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(device = Devices.PIXEL_C, showBackground = true)
+@Composable
+private fun RowTutorialPreview() {
+    RowTutorialContent()
+}</code></pre>
+        </div>
+    </div>
+
+    <!-- ===== ШАГ 14 ===== -->
+    <div class="step" id="s14">
+        <div class="step-header">
+            <div class="step-num">14</div>
+            <h2>MainActivity.kt</h2>
+        </div>
+
+        <div class="what-why">
+            <h4>🤔 Что мы делаем и зачем?</h4>
+            <p>Точка входа приложения. Activity устанавливает корневой контент через <span class="inline-code">setContent { }</span>.</p>
+        </div>
+
+        <p>Замените содержимое файла <span class="inline-code">MainActivity.kt</span>:</p>
+
+        <div class="code-wrapper">
+            <div class="code-header">
+                <span class="filename">MainActivity.kt</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Копировать</button>
+            </div>
+<pre><code>package com.example.rowtutorial
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            MaterialTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    RowTutorialScreen()
+                }
+            }
+        }
+    }
+}</code></pre>
+        </div>
+    </div>
+
+    <!-- ===== ШАГ 15 ===== -->
+    <div class="step" id="s15">
+        <div class="step-header">
+            <div class="step-num">15</div>
+            <h2>Запуск и проверка</h2>
+        </div>
+
+        <h3>15.1 Синхронизация</h3>
+        <ol>
+            <li>Нажмите <strong>File → Sync Project with Gradle Files</strong> (иконка 🐘)</li>
+            <li>Дождитесь сообщения <strong>BUILD SUCCESSFUL</strong> в нижней панели</li>
+        </ol>
+
+        <h3>15.2 Проверка Preview</h3>
+        <ol>
+            <li>Откройте <span class="inline-code">RowTutorialScreen.kt</span></li>
+            <li>В правом верхнем углу редактора нажмите <strong>Split</strong></li>
+            <li>Справа появится визуальный предпросмотр экрана</li>
+        </ol>
+
+        <div class="tip">
+            Если Preview не отображается — нажмите кнопку <strong>Build & Refresh</strong> на панели предпросмотра.
+        </div>
+
+        <h3>15.3 Запуск на эмуляторе</h3>
+        <ol>
+            <li>Создайте эмулятор через <strong>Tools → Device Manager</strong> (например, Pixel 7, API 35)</li>
+            <li>Выберите его в верхней панели и нажмите <strong>▶ Run</strong> (Shift+F10)</li>
+        </ol>
+
+        <div class="success">
+            🎉 Готово! Вы увидите прокручиваемый экран с 5 секциями о работе компонента Row.
+        </div>
+
+        <h3>Что демонстрирует экран:</h3>
+        <table>
+            <tr><th>Секция</th><th>Что показывает</th></tr>
+            <tr><td>Arrangement</td><td>Start, End, Center, SpaceEvenly, SpaceAround, SpaceBetween</td></tr>
+            <tr><td>Vertical Alignment</td><td>Top, CenterVertically, Bottom</td></tr>
+            <tr><td>Weight</td><td>Распределение ширины пропорционально весу</td></tr>
+            <tr><td>Modifier Order</td><td>Разница между padding до/после background</td></tr>
+            <tr><td>Shadow</td><td>Тень с elevation и скруглённой формой</td></tr>
+        </table>
+
+        <h3>Частые проблемы:</h3>
+        <table>
+            <tr><th>Проблема</th><th>Решение</th></tr>
+            <tr>
+                <td>«Plugin was not found»</td>
+                <td>Проверьте, что в <span class="inline-code">settings.gradle.kts</span> указан <span class="inline-code">google()</span> в <span class="inline-code">pluginManagement</span></td>
+            </tr>
+            <tr>
+                <td>Unresolved reference: MaterialTheme</td>
+                <td>Убедитесь, что подключён <span class="inline-code">androidx.compose.material3</span> в зависимостях</td>
+            </tr>
+            <tr>
+                <td>Preview не обновляется</td>
+                <td>Нажмите Build & Refresh; функция должна быть без параметров и с @Preview</td>
+            </tr>
+            <tr>
+                <td>Приложение крашится при запуске</td>
+                <td>Проверьте, что в манифесте Activity имеет <span class="inline-code">exported="true"</span> и intent-filter</td>
+            </tr>
+        </table>
+    </div>
+
+</div>
+
+<footer>
+    <p>📖 Row Tutorial — руководство для начинающих</p>
+    <p>Kotlin 2.4.20 • AGP 9.4.0 • Gradle 9.6.0 • Compose BOM 2026.08.00</p>
+    <p>Сентябрь 2026</p>
+</footer>
+
+<script>
+function copyCode(button) {
+    const codeBlock = button.closest('.code-wrapper').querySelector('pre code');
+    const text = codeBlock.innerText;
+    
+    navigator.clipboard.writeText(text).then(() => {
+        const originalText = button.innerHTML;
+        button.innerHTML = '✅ Скопировано!';
+        button.classList.add('copied');
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('copied');
+        }, 2000);
+    }).catch(err => {
+        // Fallback для старых браузеров
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        
+        const originalText = button.innerHTML;
+        button.innerHTML = '✅ Скопировано!';
+        button.classList.add('copied');
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('copied');
+        }, 2000);
+    });
+}
+</script>
+
+</body>
+</html>
