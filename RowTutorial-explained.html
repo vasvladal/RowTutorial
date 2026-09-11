@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RowTutorial — полный разбор проекта на Jetpack Compose</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  :root{
+    --bg:#f3f4fb; --card:#ffffff; --ink:#1a1b2e; --muted:#5c6073;
+    --accent:#5e57f9; --accent-2:#22c1e0; --warn:#e95f8a; --border:#e3e6f0;
+    --code-bg:#14152a; --code-head:#1f2140; --code-ink:#d6deeb;
+    --radius:16px;
+    --shadow:0 12px 36px rgba(26,27,46,.09);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.65; font-size:16px;
+  }
+  .container{max-width:1160px; margin:0 auto; padding:0 24px;}
+  code, pre, kbd{font-family:'JetBrains Mono',ui-monospace,Consolas,monospace;}
+
+  /* ===== Hero ===== */
+  .hero{
+    background:linear-gradient(135deg,#2a1f6b 0%,#5e57f9 50%,#22c1e0 100%);
+    color:#fff; padding:78px 0 130px; position:relative; overflow:hidden;
+  }
+  .hero::before{content:''; position:absolute; inset:0;
+    background:radial-gradient(700px 400px at 80% 10%,rgba(255,255,255,.22),transparent 60%); pointer-events:none;}
+  .hero::after{content:''; position:absolute; inset:0;
+    background:radial-gradient(500px 300px at 10% 90%,rgba(34,193,224,.3),transparent 60%); pointer-events:none;}
+  .hero .badges{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:22px; position:relative; z-index:1;}
+  .badge{
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.35);
+    backdrop-filter:blur(6px); padding:6px 14px; border-radius:999px;
+    font-size:13px; font-weight:600; letter-spacing:.3px;
+  }
+  .hero h1{font-size:clamp(2rem,5vw,3.2rem); font-weight:800; line-height:1.15; letter-spacing:-.5px; max-width:880px; position:relative; z-index:1;}
+  .hero p{margin-top:16px; font-size:1.08rem; max-width:780px; color:rgba(255,255,255,.92); position:relative; z-index:1;}
+  .hero .subtitle{margin-top:10px; font-size:.95rem; color:rgba(255,255,255,.75); position:relative; z-index:1;}
+
+  /* ===== Layout ===== */
+  .layout{display:grid; grid-template-columns:290px minmax(0,1fr); gap:28px; margin-top:-72px; position:relative; z-index:2; padding-bottom:64px;}
+
+  /* ===== TOC ===== */
+  .toc{align-self:start; position:sticky; top:24px;}
+  .toc .box{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:22px;}
+  .toc h2{font-size:.78rem; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:14px;}
+  .toc ol{list-style:none; counter-reset:t;}
+  .toc li{counter-increment:t; margin:2px 0;}
+  .toc a{
+    display:flex; gap:10px; align-items:baseline; text-decoration:none; color:var(--ink);
+    font-size:.88rem; font-weight:500; padding:6px 10px; border-radius:10px; transition:.18s;
+  }
+  .toc a::before{
+    content:counter(t,decimal-leading-zero); color:var(--accent); font-weight:700;
+    font-family:'JetBrains Mono',monospace; font-size:.74rem;
+  }
+  .toc a:hover{background:#eeecff; color:var(--accent);}
+  .toc .group-label{
+    display:block; font-size:.7rem; text-transform:uppercase; letter-spacing:1.3px;
+    color:var(--muted); margin:14px 8px 5px; font-weight:700;
+  }
+
+  /* ===== Cards ===== */
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:32px 36px; margin-bottom:28px; scroll-margin-top:24px;
+  }
+  .card header{display:flex; align-items:center; gap:16px; margin-bottom:18px; flex-wrap:wrap;}
+  .card .fileicon{
+    flex:0 0 48px; height:48px; border-radius:14px; display:grid; place-items:center;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    color:#fff; font-weight:800; font-size:1.15rem; font-family:'JetBrains Mono',monospace;
+    box-shadow:0 8px 20px rgba(94,87,249,.35);
+  }
+  .card h2{font-size:1.5rem; font-weight:800; letter-spacing:-.4px; flex:1;}
+  .card h2 code{
+    background:linear-gradient(135deg,#eeecff,#e4f6fb); color:var(--accent);
+    padding:3px 12px; border-radius:10px; font-size:1.15rem; font-weight:700; border:1px solid #d9d5ff;
+  }
+  .card .tag{
+    font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px;
+    padding:4px 12px; border-radius:999px; background:#f0efff; color:var(--accent);
+  }
+  .card .tag.src{background:#e4f6fb; color:#0e7c97;}
+  .card .tag.diag{background:#fff1f6; color:#b3355f;}
+  .card p{margin:12px 0; color:#2d3145;}
+  .card p code, li code, .callout code, td code{
+    background:#eef0f8; border:1px solid #dfe2ee; color:#4d44d4;
+    padding:1px 7px; border-radius:7px; font-size:.86em; font-weight:500;
+  }
+  .card ul, .card ol{margin:12px 0 12px 22px; color:#2d3145;}
+  .card li{margin:8px 0;}
+  .card h3{font-size:1.1rem; font-weight:700; margin:24px 0 10px; color:var(--ink);}
+
+  /* ===== Code ===== */
+  figure.code{margin:18px 0; border-radius:12px; overflow:hidden; background:var(--code-bg); border:1px solid #2a2c4a;}
+  figure.code figcaption{
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    background:var(--code-head); padding:10px 16px; color:#9aa3c4;
+    font-size:12.5px; font-weight:600; letter-spacing:.4px;
+  }
+  figure.code figcaption .fname{display:flex; align-items:center; gap:9px; font-family:'JetBrains Mono',monospace;}
+  figure.code figcaption .fname::before{content:''; width:10px; height:10px; border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));}
+  .copy{
+    background:transparent; border:1px solid #3b4159; color:#9aa3c4; border-radius:8px;
+    padding:4px 12px; font-size:12px; font-weight:600; cursor:pointer; transition:.18s;
+    font-family:'Inter',sans-serif;
+  }
+  .copy:hover{border-color:var(--accent); color:#c9b8ff;}
+  figure.code pre{padding:16px 20px; overflow-x:auto; font-size:13.5px; line-height:1.7; color:var(--code-ink);}
+  .tk-kw{color:#c792ea;} .tk-fn{color:#82aaff;} .tk-str{color:#c3e88d;}
+  .tk-com{color:#7b8496; font-style:italic;} .tk-num{color:#f78c6c;}
+  .tk-sec{color:#ffcb6b; font-weight:600;} .tk-key{color:#89ddff;}
+
+  /* ===== Callouts ===== */
+  .callout{display:flex; gap:13px; align-items:flex-start; padding:14px 18px; border-radius:12px; margin:18px 0; font-size:.95rem; border:1px solid;}
+  .callout .ico{font-size:1.25rem; line-height:1.4;}
+  .callout.tip{background:#f2fdf5; border-color:#bbebc9; color:#1d5c33;}
+  .callout.warn{background:#fff9eb; border-color:#f5dfa0; color:#7a5410;}
+  .callout.info{background:#eef2ff; border-color:#c9d4fb; color:#33418f;}
+  .callout.quirk{background:#fff1f6; border-color:#f8c4d8; color:#8b1e45;}
+  .callout strong{font-weight:700;}
+
+  /* ===== Tables ===== */
+  table.vtable{width:100%; border-collapse:collapse; margin:16px 0; font-size:.92rem;}
+  table.vtable th{
+    background:#f4f3ff; text-align:left; padding:10px 14px; font-size:.8rem;
+    text-transform:uppercase; letter-spacing:.8px; color:var(--accent); border-bottom:2px solid #d9d5ff;
+  }
+  table.vtable td{padding:11px 14px; border-bottom:1px solid var(--border); vertical-align:top;}
+  table.vtable tr:last-child td{border-bottom:none;}
+
+  /* ===== Diagrams ===== */
+  .diagram-box{
+    background:#fbfbff; border:1.5px dashed #c9c3ff; border-radius:14px;
+    padding:26px 20px; margin:18px 0; overflow-x:auto;
+  }
+  .diagram-box .mermaid{display:flex; justify-content:center; min-width:560px;}
+  .diagram-note{font-size:.85rem; color:var(--muted); text-align:center; margin-top:10px; font-style:italic;}
+
+  /* ===== Flow ===== */
+  .flow{
+    background:linear-gradient(135deg,#f4f2ff,#ebf9fc); border:1px solid #d9d5ff;
+    border-radius:var(--radius); padding:32px 28px; margin:16px 0;
+  }
+  .flow-title{font-weight:800; font-size:1.05rem; text-align:center; margin-bottom:22px; letter-spacing:-.3px;}
+  .flow-row{display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px; margin-top:10px;}
+  .flow-node{
+    background:#fff; border:1.5px solid #d9d5ff; border-radius:12px; padding:10px 16px;
+    font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; color:var(--accent);
+    box-shadow:0 4px 12px rgba(94,87,249,.12);
+  }
+  .flow-node.highlight{background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#fff; border-color:transparent;}
+  .flow-node.alt{border-color:#a9e3f2; color:#0e7c97;}
+  .flow-arrow{color:var(--accent); font-weight:800; font-size:1.3rem; text-align:center;}
+  .flow-note{text-align:center; margin-top:2px; font-size:.85rem; color:var(--muted); font-style:italic;}
+
+  /* ===== Quirks grid ===== */
+  .quirk-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin:16px 0;}
+  .quirk-card{
+    background:#fafaff; border:1px solid #e3e0ff; border-radius:14px; padding:18px 20px;
+    border-left:4px solid var(--warn);
+  }
+  .quirk-card h4{font-size:.98rem; font-weight:700; margin-bottom:8px; color:#8b1e45; display:flex; align-items:center; gap:8px;}
+  .quirk-card p{font-size:.9rem; color:#4a3a50; margin:0;}
+
+  footer{padding:38px 0 48px; text-align:center; color:var(--muted); font-size:.85rem;}
+  @media (max-width:920px){
+    .layout{grid-template-columns:1fr;}
+    .toc{position:static;}
+    .card{padding:24px 22px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="container">
+    <div class="badges">
+      <span class="badge">Jetpack Compose</span>
+      <span class="badge">Kotlin 2.4.20</span>
+      <span class="badge">AGP 9.4.0</span>
+      <span class="badge">Gradle Kotlin DSL</span>
+    </div>
+    <h1>RowTutorial — как устроен проект</h1>
+    <p>Подробный разбор каждого файла этой кодовой базы на Jetpack Compose: конфигурация сборки, инструментация Gradle и исходники приложения — и как всё это соединяется, чтобы отрисовать на экране интерактивный урок по компоновке <code>Row</code>.</p>
+    <div class="subtitle">Включает диаграмму классов и диаграммы последовательностей: запуск приложения и процесс сборки.</div>
+  </div>
+</header>
+
+<div class="container layout">
+
+  <!-- ======= TOC ======= -->
+  <aside class="toc">
+    <div class="box">
+      <h2>Содержание</h2>
+      <ol>
+        <span class="group-label">Знакомство</span>
+        <li><a href="#overview">Что это за проект</a></li>
+
+        <span class="group-label">Конфигурация сборки</span>
+        <li><a href="#settings">settings.gradle.kts</a></li>
+        <li><a href="#root-build">build.gradle.kts (корень)</a></li>
+        <li><a href="#catalog">gradle/libs.versions.toml</a></li>
+        <li><a href="#app-build">app/build.gradle.kts</a></li>
+        <li><a href="#gradle-props">gradle.properties</a></li>
+        <li><a href="#daemon-jvm">gradle-daemon-jvm.properties</a></li>
+
+        <span class="group-label">Исходники приложения</span>
+        <li><a href="#manifest">AndroidManifest.xml</a></li>
+        <li><a href="#entry">MainActivity.kt</a></li>
+        <li><a href="#screen">RowTutorialScreen.kt</a></li>
+        <li><a href="#components">TutorialTexts.kt</a></li>
+
+        <span class="group-label">Диаграммы</span>
+        <li><a href="#class-diagram">Диаграмма классов</a></li>
+        <li><a href="#seq-diagram">Диаграммы последовательностей</a></li>
+
+        <span class="group-label">Итоги</span>
+        <li><a href="#flow">Как всё связано</a></li>
+        <li><a href="#notes">Примечательные детали</a></li>
+      </ol>
+    </div>
+  </aside>
+
+  <main>
+
+    <!-- ======= OVERVIEW ======= -->
+    <section class="card" id="overview">
+      <header>
+        <span class="fileicon">01</span>
+        <h2>Что это за проект</h2>
+        <span class="tag">Обзор</span>
+      </header>
+
+      <p>Это небольшое <strong>одноэкранное Android-приложение</strong>, построенное на Jetpack Compose. Его цель — образовательная: наглядно показать, как ведёт себя компоновка <code>Row</code> в различных конфигурациях — горизонтальное распределение (<em>arrangement</em>), вертикальное выравнивание (<em>alignment</em>), веса (<em>weights</em>), порядок модификаторов и тени — отрисовывая <strong>прокручиваемый список живых, работающих примеров</strong> с пояснительными подписями над каждым из них.</p>
+
+      <p>Все файлы делятся на две группы: <strong>конфигурация сборки и инструментарий</strong> (как Gradle собирает приложение, какой JDK использует, какие версии библиотек подтягивает) и <strong>исходники приложения</strong> (собственно Kotlin/Compose-код, который выполняется на устройстве). Этот разбор охватывает обе группы.</p>
+
+      <div class="callout info">
+        <span class="ico">🧭</span>
+        <div><strong>Как читать:</strong> разделы 02–07 описывают файлы сборки в том порядке, в котором их читает Gradle. Разделы 08–11 — исходники в порядке их вызова во время работы приложения. Разделы 12–13 дают визуальную сводку через диаграммы классов и последовательностей.</div>
+      </div>
+    </section>
+
+    <!-- ======= SETTINGS ======= -->
+    <section class="card" id="settings">
+      <header>
+        <span class="fileicon">02</span>
+        <h2><code>settings.gradle.kts</code></h2>
+        <span class="tag">Конфигурация сборки</span>
+      </header>
+
+      <p>Отправная точка, которую Gradle читает <strong>первой</strong>. Задаёт имя проекта (<code>RowTutorial</code>), объявляет, что в сборке один модуль — <code>:app</code> — и настраивает, откуда разрешаются плагины и зависимости.</p>
+
+      <figure class="code">
+        <figcaption><span class="fname">settings.gradle.kts</span><button class="copy" type="button">Копировать</button></figcaption>
+<pre><code><span class="tk-fn">pluginManagement</span> {
+    <span class="tk-fn">repositories</span> {
+        <span class="tk-fn">gradlePluginPortal</span>()
+        <span class="tk-fn">google</span>()
+        <span class="tk-fn">mavenCentral</span>()
+    }
+}
+<span class="tk-fn">plugins</span> {
+    <span class="tk-fn">id</span>(<span class="tk-str">"org.gradle.toolchains.foojay-resolver-convention"</span>) <span class="tk-fn">version</span> <span class="tk-str">"1.0.0"</span>
+}
+<span class="tk-fn">dependencyResolutionManagement</span> {
+    repositoriesMode.<span class="tk-fn">set</span>(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    <span class="tk-fn">repositories</span> {
+        <span class="tk-fn">google</span>()
+        <span class="tk-fn">mavenCentral</span>()
+    }
+}
+rootProject.name = <span class="tk-str">"RowTutorial"</span>
+<span class="tk-fn">include</span>(<span class="tk-str">":app"</span>)</code></pre>
+      </figure>
+
+      <ul>
+        <li><strong><code>pluginManagement</code></strong> — где Gradle ищет сами плагины (Android Gradle Plugin, плагин Kotlin и т.д.) — ещё до выполнения кода любого модуля.</li>
+        <li><strong><code>foojay-resolver-convention</code></strong> — позволяет Gradle автоматически скачать подходящий тулчейн JDK, если запрошенный (см. <code>gradle-daemon-jvm.properties</code> ниже) ещё не установлен локально.</li>
+        <li><strong><code>dependencyResolutionManagement</code> + <code>FAIL_ON_PROJECT_REPOS</code></strong> — централизует источники <em>библиотечных</em> зависимостей и запрещает отдельным модулям (таким как <code>app</code>) объявлять собственные репозитории — источники зависимостей остаются едиными для всего проекта.</li>
+        <li><strong><code>include(":app")</code></strong> — регистрирует модуль <code>app</code> в сборке; именно поэтому <code>app/build.gradle.kts</code> существует отдельным файлом.</li>
+      </ul>
+    </section>
+
+    <!-- ======= ROOT BUILD ======= -->
+    <section class="card" id="root-build">
+      <header>
+        <span class="fileicon">03</span>
+        <h2><code>build.gradle.kts</code> <small style="color:var(--muted);font-weight:500;">— корень</small></h2>
+        <span class="tag">Конфигурация сборки</span>
+      </header>
+
+      <p>Корневой скрипт сборки, стоящий над модулем <code>app</code>. Объявляет, какие плагины <em>доступны</em> всему проекту, но не активирует их здесь:</p>
+
+      <figure class="code">
+        <figcaption><span class="fname">build.gradle.kts (корень проекта)</span><button class="copy" type="button">Копировать</button></figcaption>
+<pre><code><span class="tk-fn">plugins</span> {
+    <span class="tk-fn">alias</span>(libs.plugins.android.application) <span class="tk-kw">apply false</span>
+    <span class="tk-fn">alias</span>(libs.plugins.compose) <span class="tk-kw">apply false</span>
+}</code></pre>
+      </figure>
+
+      <p><code>apply false</code> означает: <em>«сделай этот плагин известным и зафиксируй его версию, но не активируй его в этом файле»</em>. Каждый модуль, которому плагин действительно нужен (здесь — только <code>app</code>), применяет его, не указывая версию повторно — так исключаются конфликты версий между модулями и сохраняется единственный источник истины.</p>
+
+      <div class="callout info">
+        <span class="ico">🔗</span>
+        <div>Обе ссылки на плагины — <code>libs.plugins.android.application</code> и <code>libs.plugins.compose</code> — это <strong>алиасы в каталог версий</strong>, а не «сырые» идентификаторы плагинов. Сам каталог описан в следующем разделе.</div>
+      </div>
+    </section>
+
+    <!-- ======= CATALOG ======= -->
+    <section class="card" id="catalog">
+      <header>
+        <span class="fileicon">04</span>
+        <h2><code>gradle/libs.versions.toml</code></h2>
+        <span class="tag">Каталог версий</span>
+      </header>
+
+      <p><strong>Каталог версий Gradle</strong> — единый TOML-файл, централизующий все координаты зависимостей и строки версий, используемые где-либо в сборке, чтобы ни одному Gradle-файлу не приходилось прописывать версии напрямую.</p>
+
+      <figure class="code">
+        <figcaption><span class="fname">gradle/libs.versions.toml</span><button class="copy" type="button">Копировать</button></figcaption>
+<pre><code><span class="tk-sec">[versions]</span>
+<span class="tk-key">androidGradlePlugin</span> = <span class="tk-str">"9.4.0"</span>
+<span class="tk-key">compileSdk</span> = <span class="tk-str">"37"</span>
+<span class="tk-key">minSdk</span> = <span class="tk-str">"24"</span>
+<span class="tk-key">targetSdk</span> = <span class="tk-str">"35"</span>
+<span class="tk-key">kotlin</span> = <span class="tk-str">"2.4.20"</span>
+<span class="tk-key">coroutines</span> = <span class="tk-str">"1.11.0"</span>
+<span class="tk-key">androidx-corektx</span> = <span class="tk-str">"1.19.0"</span>
+<span class="tk-key">androidx-appcompat</span> = <span class="tk-str">"1.8.0"</span>
+<span class="tk-key">androidx-activity-compose</span> = <span class="tk-str">"1.13.0"</span>
+<span class="tk-key">androidx-compose-bom</span> = <span class="tk-str">"2026.08.00"</span>
+<span class="tk-key">androidx-lifecycle-compose</span> = <span class="tk-str">"2.11.0"</span>
+<span class="tk-key">junit</span> = <span class="tk-str">"4.13.2"</span>
+<span class="tk-key">androidx-test</span> = <span class="tk-str">"1.7.0"</span>
+<span class="tk-key">androidx-test-ext-junit</span> = <span class="tk-str">"1.3.0"</span>
+<span class="tk-key">androidx-test-espresso</span> = <span class="tk-str">"3.7.0"</span>
+
+<span class="tk-sec">[libraries]</span>
+<span class="tk-key">kotlin-stdlib</span> = { module = <span class="tk-str">"org.jetbrains.kotlin:kotlin-stdlib"</span>, version.ref = <span class="tk-str">"kotlin"</span> }
+<span class="tk-key">kotlinx-coroutines-android</span> = { module = <span class="tk-str">"org.jetbrains.kotlinx:kotlinx-coroutines-android"</span>, version.ref = <span class="tk-str">"coroutines"</span> }
+<span class="tk-key">androidx-core-ktx</span> = { module = <span class="tk-str">"androidx.core:core-ktx"</span>, version.ref = <span class="tk-str">"androidx-corektx"</span> }
+<span class="tk-key">androidx-appcompat</span> = { module = <span class="tk-str">"androidx.appcompat:appcompat"</span>, version.ref = <span class="tk-str">"androidx-appcompat"</span> }
+<span class="tk-key">androidx-activity-compose</span> = { module = <span class="tk-str">"androidx.activity:activity-compose"</span>, version.ref = <span class="tk-str">"androidx-activity-compose"</span> }
+<span class="tk-key">androidx-compose-bom</span> = { module = <span class="tk-str">"androidx.compose:compose-bom"</span>, version.ref = <span class="tk-str">"androidx-compose-bom"</span> }
+<span class="tk-key">androidx-compose-runtime</span> = { module = <span class="tk-str">"androidx.compose.runtime:runtime"</span> }
+<span class="tk-key">androidx-compose-foundation</span> = { module = <span class="tk-str">"androidx.compose.foundation:foundation"</span> }
+<span class="tk-key">androidx-compose-foundation-layout</span> = { module = <span class="tk-str">"androidx.compose.foundation:foundation-layout"</span> }
+<span class="tk-key">androidx-compose-ui</span> = { module = <span class="tk-str">"androidx.compose.ui:ui"</span> }
+<span class="tk-key">androidx-compose-ui-tooling</span> = { module = <span class="tk-str">"androidx.compose.ui:ui-tooling"</span> }
+<span class="tk-key">androidx-compose-ui-tooling-preview</span> = { module = <span class="tk-str">"androidx.compose.ui:ui-tooling-preview"</span> }
+<span class="tk-key">androidx-compose-material</span> = { module = <span class="tk-str">"androidx.compose.material:material"</span> }
+<span class="tk-key">androidx-compose-material3</span> = { module = <span class="tk-str">"androidx.compose.material3:material3"</span> }
+<span class="tk-key">androidx-lifecycle-runtime-compose</span> = { module = <span class="tk-str">"androidx.lifecycle:lifecycle-runtime-compose"</span>, version.ref = <span class="tk-str">"androidx-lifecycle-compose"</span> }
+<span class="tk-key">junit</span> = { module = <span class="tk-str">"junit:junit"</span>, version.ref = <span class="tk-str">"junit"</span> }
+<span class="tk-key">androidx-test-core</span> = { module = <span class="tk-str">"androidx.test:core"</span>, version.ref = <span class="tk-str">"androidx-test"</span> }
+<span class="tk-key">androidx-test-runner</span> = { module = <span class="tk-str">"androidx.test:runner"</span>, version.ref = <span class="tk-str">"androidx-test"</span> }
+<span class="tk-key">androidx-test-espresso-core</span> = { module = <span class="tk-str">"androidx.test.espresso:espresso-core"</span>, version.ref = <span class="tk-str">"androidx-test-espresso"</span> }
+<span class="tk-key">androidx-test-ext-junit</span> = { module = <span class="tk-str">"androidx.test.ext:junit"</span>, version.ref = <span class="tk-str">"androidx-test-ext-junit"</span> }
+<span class="tk-key">androidx-compose-ui-test</span> = { module = <span class="tk-str">"androidx.compose.ui:ui-test-junit4"</span> }
+<span class="tk-key">androidx-compose-ui-test-manifest</span> = { module = <span class="tk-str">"androidx.compose.ui:ui-test-manifest"</span> }
+
+<span class="tk-sec">[plugins]</span>
+<span class="tk-key">android-application</span> = { id = <span class="tk-str">"com.android.application"</span>, version.ref = <span class="tk-str">"androidGradlePlugin"</span> }
+<span class="tk-key">compose</span> = { id = <span class="tk-str">"org.jetbrains.kotlin.plugin.compose"</span>, version.ref = <span class="tk-str">"kotlin"</span> }</code></pre>
+      </figure>
+
+      <p>Три раздела, на каждый из которых в других местах сборки ссылаются по-разному:</p>
+
+      <table class="vtable">
+        <thead>
+          <tr><th>Раздел</th><th>Назначение</th><th>Как на него ссылаются</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>[versions]</code></td>
+            <td>Сырые строки версий, переиспользуемые библиотеками и плагинами ниже</td>
+            <td><code>libs.versions.compileSdk.get()</code></td>
+          </tr>
+          <tr>
+            <td><code>[libraries]</code></td>
+            <td>Координаты зависимостей (группа:артефакт + версия)</td>
+            <td><code>libs.androidx.compose.bom</code></td>
+          </tr>
+          <tr>
+            <td><code>[plugins]</code></td>
+            <td>Идентификаторы Gradle-плагинов + версии</td>
+            <td><code>libs.plugins.android.application</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>Несколько деталей, на которые стоит обратить внимание:</p>
+      <ul>
+        <li><strong>Плагин Compose переиспользует версию Kotlin:</strong> <code>compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }</code> — плагин компилятора Compose привязан напрямую к версии компилятора Kotlin (<code>2.4.20</code>). Так современные Kotlin/Compose-проекты избавляются от отдельного учёта «версии компилятора Compose».</li>
+        <li><strong>Compose BOM:</strong> <code>androidx-compose-bom = "2026.08.00"</code> — это версия bill-of-materials; у отдельных Compose-библиотек под ней (<code>androidx-compose-ui</code>, <code>androidx-compose-material3</code> и т.д.) версии намеренно нет — BOM обеспечивает всем им согласованную версию разом, когда подключается как платформенная зависимость в <code>app/build.gradle.kts</code>.</li>
+        <li><strong>Разброс SDK:</strong> от <code>minSdk = 24</code> (Android 7.0) до <code>compileSdk = 37</code> / <code>targetSdk = 35</code> — достаточно современный диапазон таргетирования.</li>
+      </ul>
+    </section>
+
+    <!-- ======= APP BUILD ======= -->
+    <section class="card" id="app-build">
+      <header>
+        <span class="fileicon">05</span>
+        <h2><code>app/build.gradle.kts</code></h2>
+        <span class="tag">Конфигурация сборки</span>
+      </header>
+
+      <p>Настраивает реальный модуль Android-приложения — именно здесь записи из каталога версий выше пускаются в дело.</p>
+
+      <figure class="code">
+        <figcaption><span class="fname">app/build.gradle.kts</span><button class="copy" type="button">Копировать</button></figcaption>
+<pre><code><span class="tk-fn">plugins</span> {
+    <span class="tk-fn">alias</span>(libs.plugins.android.application)
+    <span class="tk-fn">alias</span>(libs.plugins.compose)
+}
+
+<span class="tk-fn">android</span> {
+    namespace = <span class="tk-str">"com.example.rowtutorial"</span>
+    compileSdk = libs.versions.compileSdk.<span class="tk-fn">get</span>().<span class="tk-fn">toInt</span>()
+
+    <span class="tk-fn">defaultConfig</span> {
+        applicationId = <span class="tk-str">"com.example.rowtutorial"</span>
+        minSdk = libs.versions.minSdk.<span class="tk-fn">get</span>().<span class="tk-fn">toInt</span>()
+        targetSdk = libs.versions.targetSdk.<span class="tk-fn">get</span>().<span class="tk-fn">toInt</span>()
+        versionCode = <span class="tk-num">1</span>
+        versionName = <span class="tk-str">"1.0"</span>
+        testInstrumentationRunner = <span class="tk-str">"androidx.test.runner.AndroidJUnitRunner"</span>
+    }
+
+    <span class="tk-fn">buildTypes</span> {
+        <span class="tk-fn">release</span> {
+            isMinifyEnabled = <span class="tk-kw">true</span>
+            isShrinkResources = <span class="tk-kw">true</span>
+            <span class="tk-fn">proguardFiles</span>(
+                <span class="tk-fn">getDefaultProguardFile</span>(<span class="tk-str">"proguard-android-optimize.txt"</span>),
+                <span class="tk-str">"proguard-rules.pro"</span>
+            )
+        }
+    }
+
+    <span class="tk-fn">compileOptions</span> {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    <span class="tk-fn">buildFeatures</span> {
+        compose = <span class="tk-kw">true</span>
+    }
+}
+
+<span class="tk-fn">dependencies</span> {
+    <span class="tk-fn">implementation</span>(<span class="tk-fn">platform</span>(libs.androidx.compose.bom))
+    <span class="tk-fn">androidTestImplementation</span>(<span class="tk-fn">platform</span>(libs.androidx.compose.bom))
+    <span class="tk-fn">implementation</span>(libs.kotlin.stdlib)
+    <span class="tk-fn">implementation</span>(libs.kotlinx.coroutines.android)
+    <span class="tk-fn">implementation</span>(libs.androidx.core.ktx)
+    <span class="tk-fn">implementation</span>(libs.androidx.appcompat)
+    <span class="tk-fn">implementation</span>(libs.androidx.activity.compose)
+    <span class="tk-fn">implementation</span>(libs.androidx.compose.runtime)
+    <span class="tk-fn">implementation</span>(libs.androidx.compose.foundation)
+    <span class="tk-fn">implementation</span>(libs.androidx.compose.foundation.layout)
+    <span class="tk-fn">implementation</span>(libs.androidx.compose.ui)
+    <span class="tk-fn">implementation</span>(libs.androidx.compose.ui.tooling.preview)
+    <span class="tk-fn">implementation</span>(libs.androidx.compose.material)
+    <span class="tk-fn">implementation</span>(libs.androidx.compose.material3)
+    <span class="tk-fn">debugImplementation</span>(libs.androidx.compose.ui.tooling)
+    <span class="tk-fn">implementation</span>(libs.androidx.lifecycle.runtime.compose)
+    <span class="tk-fn">testImplementation</span>(libs.junit)
+    <span class="tk-fn">androidTestImplementation</span>(libs.androidx.test.core)
+    <span class="tk-fn">androidTestImplementation</span>(libs.androidx.test.runner)
+    <span class="tk-fn">androidTestImplementation</span>(libs.androidx.test.espresso.core)
+    <span class="tk-fn">androidTestImplementation</span>(libs.androidx.test.ext.junit)
+    <span class="tk-fn">androidTestImplementation</span>(libs.androidx.compose.ui.test)
+    <span class="tk-fn">androidTestImplementation</span>(libs.androidx.compose.ui.test.manifest)
+}</code></pre>
+      </figure>
+
+      <ul>
+        <li><strong>Плагины:</strong> применяет <code>android.application</code> и <code>compose</code>, активируя то, что корневой <code>build.gradle.kts</code> лишь зарегистрировал.</li>
+        <li><strong><code>namespace</code> / <code>applicationId</code>:</strong> <code>com.example.rowtutorial</code> — пакет для сгенерированных классов <code>R</code> и идентификатор установленного приложения на устройстве.</li>
+        <li><strong><code>buildFeatures.compose = true</code>:</strong> включает компиляцию Compose — без этого ни одна <code>@Composable</code>-функция из исходников ниже не скомпилировалась бы.</li>
+        <li><strong>Релизный тип сборки:</strong> включает минификацию кода и сжатие ресурсов через ProGuard для меньшего размера релизных APK.</li>
+        <li><strong>Зависимости:</strong> импортирует Compose BOM как платформенную зависимость <code>platform(...)</code> (чтобы все Compose-библиотеки без версий разрешились в согласованные версии), затем подтягивает Compose runtime/foundation/UI/Material/Material3, библиотеки AndroidX core/appcompat/activity/lifecycle и JUnit/Espresso/Compose-UI-test для тестирования.</li>
+      </ul>
+    </section>
+
+    <!-- ======= GRADLE PROPS ======= -->
+    <section class="card" id="gradle-props">
+      <header>
+        <span class="fileicon">06</span>
+        <h2><code>gradle.properties</code></h2>
+        <span class="tag">Конфигурация сборки</span>
+      </header>
+
+      <p>Глобальные флаги сборки Gradle/Android, применяемые ко всем модулям без необходимости повторять их в файлах Kotlin DSL:</p>
+
+      <figure class="code">
+        <figcaption><span class="fname">gradle.properties</span><button class="copy" type="button">Копировать</button></figcaption>
+<pre><code><span class="tk-key">org.gradle.jvmargs</span>=-Xmx2048m -Dfile.encoding=UTF-8
+<span class="tk-key">android.useAndroidX</span>=true
+<span class="tk-key">kotlin.code.style</span>=official
+<span class="tk-key">android.nonTransitiveRClass</span>=true
+<span class="tk-key">android.nonFinalResIds</span>=true
+<span class="tk-key">android.defaults.buildfeatures.resvalues</span>=false
+<span class="tk-key">android.enableAppCompileTimeRClass</span>=true
+<span class="tk-key">android.r8.optimizedResourceShrinking</span>=true
+<span class="tk-key">android.builtInKotlin</span>=true
+<span class="tk-key">android.newDsl</span>=true
+<span class="tk-key">android.dependency.excludeLibraryComponentsFromConstraints</span>=true</code></pre>
+      </figure>
+
+      <ul>
+        <li><strong><code>org.gradle.jvmargs</code></strong> — ограничивает кучу демона Gradle 2 ГБ и принудительно задаёт кодировку UTF-8 для единообразия сборок на разных машинах.</li>
+        <li><strong><code>android.useAndroidX=true</code></strong> — обязательный флаг, подтверждающий, что проект использует современные библиотеки AndroidX вместо устаревших <code>android.support</code>.</li>
+        <li><strong><code>android.nonTransitiveRClass</code> / <code>nonFinalResIds</code></strong> — флаги производительности сборки: сужают сгенерированный класс ресурсов (<code>R</code>) каждого модуля только до его собственных ресурсов, ускоряя инкрементальные сборки в крупных проектах.</li>
+        <li><strong><code>android.builtInKotlin=true</code> / <code>android.newDsl=true</code></strong> — включают новое поведение DSL Android Gradle Plugin (соответствует AGP <code>9.4.0</code> из каталога версий — заметно свежей/передовой версии).</li>
+        <li><strong><code>android.r8.optimizedResourceShrinking</code></strong> — работает в паре с настройкой <code>isShrinkResources = true</code> из <code>app/build.gradle.kts</code>, агрессивнее сжимая неиспользуемые ресурсы.</li>
+      </ul>
+    </section>
+
+    <!-- ======= DAEMON JVM ======= -->
+    <section class="card" id="daemon-jvm">
+      <header>
+        <span class="fileicon">07</span>
+        <h2><code>gradle/gradle-daemon-jvm.properties</code></h2>
+        <span class="tag">Конфигурация сборки</span>
+      </header>
+
+      <p>Фиксирует точный JDK, на котором работает <strong>сам демон Gradle</strong> (это отдельно от уровня языка Java, под который компилируется приложение — тот задаётся в <code>compileOptions</code> файла <code>app/build.gradle.kts</code>).</p>
+
+      <figure class="code">
+        <figcaption><span class="fname">gradle/gradle-daemon-jvm.properties</span><button class="copy" type="button">Копировать</button></figcaption>
+<pre><code><span class="tk-key">toolchainVersion</span>=25
+<span class="tk-key">toolchainUrl.LINUX.X86_64</span>=https://api.foojay.io/disco/v3.0/ids/fa1e318c287360478e3c83a9a3ef1007/redirect
+<span class="tk-key">toolchainUrl.MAC_OS.AARCH64</span>=https://api.foojay.io/disco/v3.0/ids/c2dd35c9d0aaf0ba6ad0791320f99dfc/redirect
+<span class="tk-key">toolchainUrl.WINDOWS.X86_64</span>=https://api.foojay.io/disco/v3.0/ids/d76df094a9cbbabd3b08251f9e61444a/redirect
+<span class="tk-com">... (плюс соответствующие URL для FreeBSD, дополнительных архитектур</span>
+<span class="tk-com">Linux/Mac/Windows и общего Unix)</span></code></pre>
+      </figure>
+
+      <ul>
+        <li><strong><code>toolchainVersion=25</code></strong> — запрашивает JDK 25 для запуска самого Gradle.</li>
+        <li><strong>Записи <code>toolchainUrl.*</code> для каждой ОС/архитектуры</strong> — это именно то, что использует плагин <code>foojay-resolver-convention</code> (объявленный в <code>settings.gradle.kts</code>): если JDK 25 локально не установлен, Gradle скачает его автоматически по подходящему URL для машины, выполняющей сборку, — и каждый участник получит идентичный JDK без ручной настройки.</li>
+      </ul>
+    </section>
+
+    <!-- ======= MANIFEST ======= -->
+    <section class="card" id="manifest">
+      <header>
+        <span class="fileicon">08</span>
+        <h2><code>AndroidManifest.xml</code></h2>
+        <span class="tag src">Исходники</span>
+      </header>
+
+      <p>Описание приложения, обращённое к операционной системе.</p>
+
+      <figure class="code">
+        <figcaption><span class="fname">app/src/main/AndroidManifest.xml</span><button class="copy" type="button">Копировать</button></figcaption>
+<pre><code>&lt;uses-permission android:name=<span class="tk-str">"android.permission.INTERNET"</span> /&gt;
+
+&lt;application
+    android:allowBackup=<span class="tk-str">"true"</span>
+    android:icon=<span class="tk-str">"@mipmap/ic_launcher"</span>
+    android:label=<span class="tk-str">"@string/app_name"</span>
+    android:roundIcon=<span class="tk-str">"@mipmap/ic_launcher_round"</span>
+    android:supportsRtl=<span class="tk-str">"true"</span>
+    android:theme=<span class="tk-str">"@android:style/Theme.Material.Light.NoActionBar"</span>&gt;
+
+    &lt;activity
+        android:name=<span class="tk-str">".MainActivity"</span>
+        android:exported=<span class="tk-str">"true"</span>
+        android:windowSoftInputMode=<span class="tk-str">"adjustResize"</span>
+        android:label=<span class="tk-str">"@string/app_name"</span>
+        android:theme=<span class="tk-str">"@android:style/Theme.Material.Light.NoActionBar"</span>&gt;
+        &lt;intent-filter&gt;
+            &lt;action android:name=<span class="tk-str">"android.intent.action.MAIN"</span> /&gt;
+            &lt;category android:name=<span class="tk-str">"android.intent.category.LAUNCHER"</span> /&gt;
+        &lt;/intent-filter&gt;
+    &lt;/activity&gt;
+&lt;/application&gt;</code></pre>
+      </figure>
+
+      <ul>
+        <li><strong>Разрешение INTERNET</strong> — запрошено, хотя ни один из приведённых исходников сетевых вызовов не выполняет; скорее всего, шаблонный boilerplate.</li>
+        <li><strong><code>&lt;activity android:name=".MainActivity"&gt;</code> с интент-фильтром <code>MAIN</code>/<code>LAUNCHER</code></strong> — именно это делает <code>MainActivity</code> иконкой приложения, которую нажимает пользователь, и первым классом, который ОС создаёт при запуске.</li>
+      </ul>
+    </section>
+
+    <!-- ======= MAIN ACTIVITY ======= -->
+    <section class="card" id="entry">
+      <header>
+        <span class="fileicon">09</span>
+        <h2><code>MainActivity.kt</code></h2>
+        <span class="tag src">Точка входа</span>
+      </header>
+
+      <p>Единственная <code>ComponentActivity</code>, с которой ОС общается напрямую:</p>
+
+      <figure class="code">
+        <figcaption><span class="fname">app/src/main/java/com/example/rowtutorial/MainActivity.kt</span><button class="copy" type="button">Копировать</button></figcaption>
+<pre><code><span class="tk-kw">class</span> <span class="tk-fn">MainActivity</span> : <span class="tk-fn">ComponentActivity</span>() {
+    <span class="tk-kw">override fun</span> <span class="tk-fn">onCreate</span>(savedInstanceState: Bundle?) {
+        <span class="tk-kw">super</span>.<span class="tk-fn">onCreate</span>(savedInstanceState)
+        <span class="tk-fn">setContent</span> {
+            <span class="tk-fn">MaterialTheme</span> {
+                <span class="tk-fn">Surface</span>(
+                    modifier = Modifier.<span class="tk-fn">fillMaxSize</span>(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    <span class="tk-fn">RowTutorialScreen</span>()
+                }
+            }
+        }
+    }
+}</code></pre>
+      </figure>
+
+      <p><code>setContent { }</code> — это <strong>мост между системой Activity в Android и Compose</strong>: всё внутри него — дерево Compose-UI, а не XML-разметка. Код оборачивает приложение в <code>MaterialTheme</code> по умолчанию (передавая цвета/типографику вниз по дереву) и полноэкранный <code>Surface</code>, а затем передаёт весь реальный UI в <code>RowTutorialScreen()</code>.</p>
+    </section>
+
+    <!-- ======= SCREEN ======= -->
+    <section class="card" id="screen">
+      <header>
+        <span class="fileicon">10</span>
+        <h2><code>RowTutorialScreen.kt</code></h2>
+        <span class="tag src">UI</span>
+      </header>
+
+      <p><strong>Сердце приложения</strong> — один файл, содержащий весь контент туториала и логику его компоновки, собранную из небольших Compose-функций:</p>
+
+      <ul>
+        <li><strong><code>RowTutorialScreen()</code></strong> — публичная входная Compose-функция (помечена <code>@Preview</code> для холста IDE); вызывает <code>RowTutorialContent()</code>.</li>
+        <li><strong><code>RowTutorialContent()</code></strong> — строит <code>LazyColumn</code> (прокручиваемый, «лениво» отрисовываемый вертикальный список), содержащий по порядку: заголовок, пронумерованную подпись, живой пример, ещё одну подпись, ещё один пример — и так далее, всего <strong>пять пронумерованных уроков</strong>, завершающихся спейсером.</li>
+        <li><strong>Compose-функции примеров</strong> — <code>RowExample()</code>, <code>RowVerticalAlignmentExample()</code>, <code>RowWeightExample()</code>, <code>RowPaddingOrderExample()</code>, <code>RowShadowExample()</code> — каждая отрисовывает один или несколько реальных <code>Row</code> с разными настройками, чтобы эффект был <em>увиден</em>, а не просто описан.</li>
+        <li><strong>Вспомогательные Compose-функции</strong> — <code>RowTexts()</code> и <code>DifferentHeightElements()</code> генерируют маленькие цветные дочерние элементы, переиспользуемые в нескольких примерах, оставляя каждую функцию-пример сосредоточенной на демонстрируемой концепции.</li>
+        <li><strong><code>RowTutorialPreview()</code></strong> — приватный многоконфигурационный <code>@Preview</code> (светлая, тёмная темы, планшет), используемый исключительно панелью предпросмотра Android Studio во время разработки, а не в рантайме.</li>
+      </ul>
+
+      <div class="callout info">
+        <span class="ico">🔗</span>
+        <div>Каждая подпись (<em>«1-) Row is a layout composable…»</em>) пропускается через <code>StyleableTutorialText</code>, а заголовок раздела (<em>«Row»</em>) — через <code>TutorialHeader</code>; обе функции импортируются из <code>TutorialTexts.kt</code>. <strong>Этот файл даёт контент туториала; файл компонентов — его форматирование.</strong></div>
+      </div>
+    </section>
+
+    <!-- ======= COMPONENTS ======= -->
+    <section class="card" id="components">
+      <header>
+        <span class="fileicon">11</span>
+        <h2><code>TutorialTexts.kt</code></h2>
+        <span class="tag src">Переиспользуемый UI</span>
+      </header>
+
+      <p>Небольшая библиотека Compose-функций для отрисовки текста, общая для всех подписей туториала:</p>
+
+      <ul>
+        <li><strong><code>TutorialHeader(text)</code></strong> — рисует жирный заголовок раздела размером 22sp (используется один раз, для слова <em>«Row»</em>).</li>
+        <li><strong><code>StyleableTutorialText(text, bullets)</code></strong> — принимает строку подписи с маркерами в стиле <code>**жирный**</code>, с помощью регулярного выражения (<code>boldRegex</code>) находит каждый фрагмент <code>**…**</code>, убирает звёздочки и пересобирает строку как <code>AnnotatedString</code>, где эти фрагменты отрисовываются <strong>жирным шрифтом и светло-голубым акцентным цветом</strong>. Это <strong>самодельный мини-рендерер markdown</strong> только ради выделения ключевых слов — без полноценной markdown-библиотеки. При <code>bullets = true</code> дополнительно жирнит первые 3 символа (нумерацию «1-)»).</li>
+        <li><strong><code>TutorialText2(text)</code></strong> — подпись поменьше, серого цвета со средней прозрачностью; используется для подметок <em>«Arrangement.Start»</em> / <em>«Arrangement.End»</em>. Примечательно, что она использует <strong>старый Material 2</strong> (<code>androidx.compose.material</code>) — <code>Text</code> и <code>ContentAlpha</code>, — тогда как остальное приложение построено на Material 3 (см. «Примечательные детали» ниже).</li>
+        <li><strong><code>TutorialTextPreview()</code></strong> — приватный многолокальный/мультитемный <code>@Preview</code> (включая строку-пример на русском языке), используется только в IDE.</li>
+      </ul>
+    </section>
+
+    <!-- ======= CLASS DIAGRAM ======= -->
+    <section class="card" id="class-diagram">
+      <header>
+        <span class="fileicon">12</span>
+        <h2>Диаграмма классов</h2>
+        <span class="tag diag">Диаграмма</span>
+      </header>
+
+      <p>Формально в Compose UI строится из <em>функций</em>, а не из классов, поэтому на диаграмме показаны сущности проекта и их зависимости: единственный настоящий класс (<code>MainActivity</code>, наследник <code>ComponentActivity</code>) и все Compose-функции из <code>RowTutorialScreen.kt</code> и <code>TutorialTexts.kt</code> со стереотипами <code>&lt;&lt;Composable&gt;&gt;</code> и <code>&lt;&lt;Preview&gt;&gt;</code>.</p>
+
+      <div class="callout warn">
+        <span class="ico">⚠️</span>
+        <div><strong>Почему подписи на диаграмме английские:</strong> лексер classDiagram в Mermaid не поддерживает кириллицу в членах классов и метках связей (в отличие от sequence-диаграмм) — именно это вызывало «Syntax error in text». Диаграмма намеренно выполнена только в ASCII, а полный перевод всех подписей дан в легендах ниже.</div>
+      </div>
+
+            <div class="diagram-box">
+        <div class="mermaid">
+classDiagram
+class ComponentActivity
+class MainActivity
+class RowTutorialScreen
+class RowTutorialContent
+class RowExample
+class RowVerticalAlignmentExample
+class RowWeightExample
+class RowPaddingOrderExample
+class RowShadowExample
+class RowTexts
+class DifferentHeightElements
+class TutorialHeader
+class StyleableTutorialText
+class TutorialText2
+class RowTutorialPreview
+
+MainActivity : +onCreate()
+MainActivity --|> ComponentActivity
+MainActivity ..> RowTutorialScreen
+RowTutorialScreen ..> RowTutorialContent
+RowTutorialScreen ..> RowTutorialPreview
+RowTutorialContent ..> TutorialHeader
+RowTutorialContent ..> StyleableTutorialText
+RowTutorialContent ..> RowExample
+RowTutorialContent ..> RowVerticalAlignmentExample
+RowTutorialContent ..> RowWeightExample
+RowTutorialContent ..> RowPaddingOrderExample
+RowTutorialContent ..> RowShadowExample
+RowExample ..> RowTexts
+RowExample ..> TutorialText2
+RowVerticalAlignmentExample ..> DifferentHeightElements
+RowWeightExample ..> RowTexts
+RowPaddingOrderExample ..> RowTexts
+RowShadowExample ..> RowTexts
+        </div>
+        <div class="diagram-note">Сплошная стрелка с треугольником — наследование; пунктир — вызов/использование.</div>
+      </div>
+
+      <h3>Легенда: члены классов</h3>
+      <table class="vtable">
+        <thead>
+          <tr><th>Подпись на диаграмме</th><th>По-русски</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>entry point</code></td><td>входная Compose-функция экрана</td></tr>
+          <tr><td><code>LazyColumn with 5 lessons</code></td><td>прокручиваемый список из пяти пронумерованных уроков</td></tr>
+          <tr><td><code>Arrangement</code></td><td>горизонтальное распределение дочерних элементов</td></tr>
+          <tr><td><code>Alignment</code></td><td>вертикальное выравнивание дочерних элементов</td></tr>
+          <tr><td><code>weight modifier</code></td><td>веса ячеек (<code>Modifier.weight</code>)</td></tr>
+          <tr><td><code>modifier order</code></td><td>порядок модификаторов (padding до/после background)</td></tr>
+          <tr><td><code>shadow</code></td><td>тени (<code>Modifier.shadow</code>)</td></tr>
+          <tr><td><code>colored children</code></td><td>цветные текстовые «кирпичики», переиспользуемые в примерах</td></tr>
+          <tr><td><code>different height children</code></td><td>дочерние элементы разной высоты (для демонстрации Alignment)</td></tr>
+          <tr><td><code>22sp title</code></td><td>жирный заголовок раздела размером 22sp</td></tr>
+          <tr><td><code>mini markdown</code></td><td>самодельный разбор <code>**жирного**</code> текста через regex</td></tr>
+          <tr><td><code>Material 2 caption</code></td><td>мелкая серая подпись на старых API Material 2</td></tr>
+          <tr><td><code>IDE only</code></td><td>используется только панелью предпросмотра Android Studio, не в рантайме</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Легенда: метки связей</h3>
+      <table class="vtable">
+        <thead>
+          <tr><th>Метка на диаграмме</th><th>По-русски</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>setContent</code></td><td>Activity выводит Compose-контент через <code>setContent { }</code></td></tr>
+          <tr><td><code>calls</code></td><td>вызывает</td></tr>
+          <tr><td><code>preview</code></td><td>предпросмотр</td></tr>
+          <tr><td><code>title</code></td><td>заголовок раздела</td></tr>
+          <tr><td><code>caption</code></td><td>подпись урока</td></tr>
+          <tr><td><code>lesson1 … lesson5</code></td><td>уроки 1–5</td></tr>
+          <tr><td><code>children</code></td><td>дочерние элементы примера</td></tr>
+          <tr><td><code>sublabels</code></td><td>подметки «Arrangement.Start» / «Arrangement.End»</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout tip">
+        <span class="ico">💡</span>
+        <div><strong>Как читать:</strong> «владельцем» дерева является <code>MainActivity</code>. Из него выходит одна точка входа — <code>RowTutorialScreen</code>, который раскладывается на контентную функцию и пять функций-примеров. Общие «кирпичики» (<code>RowTexts</code>, <code>DifferentHeightElements</code>, текстовые компоненты) переиспользуются несколькими примерами — именно поэтому они вынесены в отдельные функции.</div>
+      </div>
+    </section>
+
+    <!-- ======= SEQUENCE DIAGRAMS ======= -->
+    <section class="card" id="seq-diagram">
+      <header>
+        <span class="fileicon">13</span>
+        <h2>Диаграммы последовательностей</h2>
+        <span class="tag diag">Диаграмма</span>
+      </header>
+
+      <h3>📱 Запуск приложения на устройстве</h3>
+      <p>Что происходит с момента нажатия на иконку приложения до отрисовки туториала:</p>
+
+      <div class="diagram-box">
+        <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant OS as Android OS
+    participant MA as MainActivity
+    participant MT as MaterialTheme
+    participant SF as Surface
+    participant RTS as RowTutorialScreen
+    participant RTC as RowTutorialContent
+    participant TT as TutorialTexts.kt
+
+    OS->>MA: запуск через интент фильтр MAIN и LAUNCHER
+    MA->>MA: onCreate()
+    MA->>MT: setContent — MaterialTheme
+    MT->>SF: Surface с fillMaxSize
+    SF->>RTS: RowTutorialScreen()
+    RTS->>RTC: RowTutorialContent()
+    RTC->>TT: TutorialHeader — заголовок Row
+    loop 5 уроков
+        RTC->>TT: StyleableTutorialText — подпись урока
+        RTC->>RTC: живой пример — Row, веса, модификаторы, тени
+    end
+    RTC->>RTC: завершающий Spacer
+    RTC-->>OS: готовое дерево Compose UI
+        </div>
+        <div class="diagram-note">Каждая итерация цикла — один пронумерованный урок: подпись + работающий пример.</div>
+      </div>
+
+      <h3>🔧 Процесс сборки Gradle</h3>
+      <p>Как файлы конфигурации из разделов 02–07 взаимодействуют во время сборки:</p>
+
+      <div class="diagram-box">
+        <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant G as Gradle
+    participant S as settings.gradle.kts
+    participant FJ as foojay-resolver
+    participant JDK as JDK 25
+    participant CAT as libs.versions.toml
+    participant RB as build.gradle.kts корень
+    participant AB as app/build.gradle.kts
+
+    G->>S: читается первым
+    S->>FJ: запрос тулчейна из gradle-daemon-jvm.properties
+    FJ->>JDK: скачать если отсутствует
+    JDK-->>G: готовый тулчейн
+    S-->>G: rootProject.name и include app
+    G->>CAT: загрузка версий библиотек и плагинов
+    CAT-->>RB: alias ссылки на плагины
+    RB-->>G: apply false — только регистрация
+    G->>AB: применение плагинов и флагов из gradle.properties
+    AB-->>G: компиляция модуля и сборка APK
+        </div>
+        <div class="diagram-note">Версии задаются один раз в libs.versions.toml; модуль лишь применяет зарегистрированные плагины.</div>
+      </div>
+
+      <div class="callout warn">
+        <span class="ico">⚠️</span>
+        <div>Диаграммы рендерятся библиотекой <strong>Mermaid</strong> (подключается с CDN). Если страница открыта без интернета, вместо диаграммы будет виден её исходный текст — содержимое при этом не теряется.</div>
+      </div>
+    </section>
+
+    <!-- ======= FLOW ======= -->
+    <section class="card" id="flow">
+      <header>
+        <span class="fileicon">14</span>
+        <h2>Как всё связано</h2>
+        <span class="tag">Общая картина</span>
+      </header>
+
+      <div class="flow">
+        <div class="flow-title">Путь от файлов сборки до экрана</div>
+        <div class="flow-row">
+          <span class="flow-node">settings.gradle.kts</span>
+          <span class="flow-node alt">gradle-daemon-jvm.properties</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-note">читаются первыми; включают модуль, разрешают плагины из репозиториев, запрашивают JDK</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-row">
+          <span class="flow-node">gradle/libs.versions.toml</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-note">версии читаются корневым скриптом</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-row">
+          <span class="flow-node">build.gradle.kts (корень)</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-note">плагины зарегистрированы с apply false, но ещё не применены</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-row">
+          <span class="flow-node">app/build.gradle.kts</span>
+          <span class="flow-node alt">gradle.properties</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-note">применяются и настраиваются вместе с флагами; компилируется модуль</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-row">
+          <span class="flow-node">AndroidManifest.xml</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-note">модуль объявлен как launcher; ОС запускает его</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-row">
+          <span class="flow-node highlight">MainActivity.kt</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-note">setContent{} отрисовывает</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-row">
+          <span class="flow-node highlight">RowTutorialScreen.kt</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-note">использует текстовые компоненты из</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-row">
+          <span class="flow-node">TutorialTexts.kt</span>
+        </div>
+      </div>
+
+      <p><strong>Вкратце:</strong> <code>settings.gradle.kts</code>, <code>gradle-daemon-jvm.properties</code>, <code>libs.versions.toml</code> и оба <code>build.gradle.kts</code> читаются один раз — во время сборки, — чтобы определить, какой JDK запускает Gradle, какие плагины и версии библиотек используются и как компилируется модуль <code>app</code>. <code>gradle.properties</code> по пути добавляет дополнительные флаги. После сборки манифест сообщает Android, какой класс запускать — <code>MainActivity</code>, — который передаёт управление Compose; тот отрисовывает <code>RowTutorialScreen</code>, используя общие текстовые компоненты из <code>TutorialTexts.kt</code>.</p>
+    </section>
+
+    <!-- ======= NOTES ======= -->
+    <section class="card" id="notes">
+      <header>
+        <span class="fileicon">!</span>
+        <h2>Примечательные детали</h2>
+        <span class="tag">Детали</span>
+      </header>
+
+      <div class="quirk-grid">
+        <div class="quirk-card">
+          <h4>🚀 Передовые версии</h4>
+          <p>AGP <code>9.4.0</code>, Kotlin <code>2.4.20</code> и Compose BOM от <code>2026.08.00</code> — всё заметно новее большинства текущих стабильных релизов на момент написания. Если используете эту конфигурацию как есть, стоит свериться с реально доступными версиями.</p>
+        </div>
+
+        <div class="quirk-card">
+          <h4>🔀 Смешанные версии Material</h4>
+          <p>Большая часть приложения использует Material 3 (<code>androidx.compose.material3</code>), но <code>TutorialText2</code> в <code>TutorialTexts.kt</code> тянет из Material 2 (<code>androidx.compose.material</code>) — <code>Text</code>, <code>ContentAlpha</code> и <code>LocalContentAlpha</code>. Обе библиотеки присутствуют в <code>app/build.gradle.kts</code>, поэтому всё компилируется, но в производственном коде такое смешение стоит согласовать.</p>
+        </div>
+
+        <div class="quirk-card">
+          <h4>🛠 Самодельный markdown</h4>
+          <p>Регулярное выражение для парсинга жирного текста в <code>StyleableTutorialText</code> — лёгкая альтернатива собственного изготовления, позволяющая не тащить полноценную markdown-библиотеку ради выделения пары ключевых слов.</p>
+        </div>
+
+        <div class="quirk-card">
+          <h4>🌐 Неиспользуемый INTERNET</h4>
+          <p>Разрешение объявлено в манифесте, но ни один из показанных файлов не выполняет сетевых запросов — вероятно, унаследовано от шаблона проекта.</p>
+        </div>
+
+        <div class="quirk-card">
+          <h4>📦 Отсутствует gradle-wrapper.properties</h4>
+          <p>В паттернах экспорта был указан <code>gradle/wrapper/gradle-wrapper.properties</code>, но в упакованный вывод он не попал — возможно, исключён через .gitignore или отсутствует в текущем состоянии репозитория.</p>
+        </div>
+
+        <div class="quirk-card">
+          <h4>🎨 Нет кастомных файлов темы</h4>
+          <p>В отличие от более ранней версии этого экспорта, файлы <code>Color.kt</code> / <code>Theme.kt</code> / <code>Type.kt</code> в этот раз не включены — единственная темизация здесь это обычный блок <code>MaterialTheme { }</code> в <code>MainActivity</code>.</p>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <span class="ico">📚</span>
+        <div><strong>Источник:</strong> разбор сгенерирован на основе экспорта репозитория — пути к файлам и фрагменты кода соответствуют реальному исходнику из пакета <code>com.example.rowtutorial</code>.</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  RowTutorial • Jetpack Compose • Разбор кодовой базы с диаграммами классов и последовательностей
+</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#eeecff',
+      primaryTextColor: '#1a1b2e',
+      primaryBorderColor: '#5e57f9',
+      lineColor: '#5e57f9',
+      secondaryColor: '#e4f6fb',
+      tertiaryColor: '#f4f2ff',
+      fontFamily: 'Inter, sans-serif',
+      fontSize: '14px',
+      actorBorder: '#5e57f9',
+      actorBkg: '#eeecff',
+      actorTextColor: '#1a1b2e',
+      signalColor: '#3a3f52',
+      noteBkgColor: '#fff9eb',
+      noteBorderColor: '#f5dfa0'
+    },
+    sequence: { actorMargin: 50, mirrorActors: false, wrap: true }
+  });
+
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var code = btn.closest('figure.code').querySelector('pre').innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = 'Скопировано ✓';
+        setTimeout(function(){ btn.textContent = 'Копировать'; }, 1600);
+      });
+    });
+  });
+</script>
+
+</body>
+</html>
